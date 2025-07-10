@@ -984,11 +984,6 @@ class BaseMergeLatestBallotsView(BaseNewBallotSetView):
                 except ValidationError as e:
                     messages.error(self.request, e)
 
-        # Vetos
-        try:
-            self.vetos = merge_motion_vetos(self.ballotsub, bs_motions)
-        except ValidationError as e:
-            messages.error(self.request, e)
 
     def get_all_ballotsubs(self):
         q = super().get_all_ballotsubs()
