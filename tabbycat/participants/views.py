@@ -210,7 +210,7 @@ class BaseRecordView(SingleObjectFromTournamentMixin, VueTableTemplateView):
             else:
                 qs = qs.filter(debate__round__draw_status=Round.Status.RELEASED).prefetch_related(
                     Prefetch('debate__round__roundmotion_set',
-                        queryset=RoundMotion.objects.filter(round__motions_released=True).select_related('motion')))
+                        queryset=RoundMotion.objects.filter(round__motions_status=Round.MotionsStatus.MOTIONS_RELEASED).select_related('motion')))
             return qs
         except ObjectDoesNotExist:
             return None

@@ -136,6 +136,62 @@ export default {
         return smallestAgo
       }
     },
+    maxOccurrences: function () {
+      if (this.currentHoverHistories && this.clashableType === 'adjudicator') {
+        let hoverCount = 0
+        if ('adjudicator' in this.currentHoverHistories) {
+          for (const sourceHistory of this.currentHoverHistories.adjudicator) {
+            if (sourceHistory.id === this.clashableID) {
+              hoverCount += 1
+            }
+          }
+        }
+        if (hoverCount > 0) {
+          return hoverCount
+        }
+      }
+
+      if (!(this.debateOrPanelId && this.adjudicator)) {
+        return 0
+      }
+
+      const histories = this.adjudicatorHistoriesForItem(this.adjudicator.id)
+      if (!histories) {
+        return 0
+      }
+
+      let adjMax = 0
+      const debateOrPanel = this.allDebatesOrPanels[this.debateOrPanelId]
+      if (debateOrPanel && 'adjudicator' in histories) {
+        const debateAdjudicators = debateOrPanel.adjudicators
+        const adjCounts = {}
+        for (const history of histories.adjudicator) {
+          if (this.isAdjudicatorInPanel(history.id, debateAdjudicators)) {
+            adjCounts[history.id] = (adjCounts[history.id] || 0) + 1
+            if (adjCounts[history.id] > adjMax) {
+              adjMax = adjCounts[history.id]
+            }
+          }
+        }
+      }
+
+      let teamMax = 0
+      if ('teams' in this.allDebatesOrPanels[this.debateOrPanelId] && 'team' in histories) {
+        const debateTeams = this.allDebatesOrPanels[this.debateOrPanelId].teams
+        const teamCounts = {}
+        for (const history of histories.team) {
+          if (this.isTeamInDebateTeams(history.id, debateTeams)) {
+            teamCounts[history.id] = (teamCounts[history.id] || 0) + 1
+            if (teamCounts[history.id] > teamMax) {
+              teamMax = teamCounts[history.id]
+            }
+          }
+        }
+      }
+
+      const max = Math.max(adjMax, teamMax)
+      return max > 0 ? max : 0
+    },
     ...mapGetters(['allDebatesOrPanels']),
   },
 }

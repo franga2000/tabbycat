@@ -3,7 +3,6 @@ import Vuex from 'vuex'
 import { splitDebates, sortInterleaved } from './DragAndDropShardingMethods.js'
 
 Vue.use(Vuex)
-
 const debug = process.env.NODE_ENV !== 'production'
 
 // The Vuex data store that contains the list of debates that are mutated
@@ -30,6 +29,11 @@ export default new Vuex.Store({
     // For hover conflicts
     hoverClashes: null,
     hoverHistories: null,
+    // For hover venues (Edit Rooms view)
+    hoverVenueCategories: null,
+    hoverVenueDebateId: null,
+    hoverVenueConstraintSets: null,
+    hoverVenueConstraintDebateId: null,
     // For sharding
     sharding: {
       split: null,
@@ -171,6 +175,22 @@ export default new Vuex.Store({
       state.hoverClashes = null
       state.hoverHistories = null
     },
+    setHoverVenueConstraints (state, payload) {
+      state.hoverVenueConstraintSets = payload.allowedSets
+      state.hoverVenueConstraintDebateId = payload.debateId ?? null
+    },
+    unsetHoverVenueConstraints (state) {
+      state.hoverVenueConstraintSets = null
+      state.hoverVenueConstraintDebateId = null
+    },
+    setHoverVenue (state, payload) {
+      state.hoverVenueCategories = payload.categories
+      state.hoverVenueDebateId = payload.debateId
+    },
+    unsetHoverVenue (state) {
+      state.hoverVenueCategories = null
+      state.hoverVenueDebateId = null
+    },
     updateSaveCounter (state) {
       state.lastSaved = new Date()
     },
@@ -268,6 +288,18 @@ export default new Vuex.Store({
     },
     currentHoverHistories: (state) => {
       return state.hoverHistories
+    },
+    currentHoverVenueCategories: (state) => {
+      return state.hoverVenueCategories
+    },
+    currentHoverVenueDebateId: (state) => {
+      return state.hoverVenueDebateId
+    },
+    currentHoverVenueConstraintSets: (state) => {
+      return state.hoverVenueConstraintSets
+    },
+    currentHoverVenueConstraintDebateId: (state) => {
+      return state.hoverVenueConstraintDebateId
     },
     duplicateAdjudicatorAllocations: (state) => {
       let allocatedIDs = []

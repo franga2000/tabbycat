@@ -352,6 +352,9 @@ class GraphCostMixin:
                     else:
                         team.subrank = i
 
+    def room_rank_ordering(self, p):
+        return min([t.subrank for t in p if t.subrank is not None], default=0)
+
 
 class AustralsPairingMixin:
 
@@ -545,6 +548,9 @@ class SingleGraphPowerPairedDrawGenerator(GraphCostMixin, GraphGeneratorMixin, B
             -max([t.points for t in p if t.points is not None], default=0),  # First by points descending
             min([t.subrank for t in p if t.subrank is not None and t.points == max(q.points for q in p)], default=0),  # Then by subrank of highest ranked team
         )
+
+    def get_bracket(self, pairing, points):
+        return max([t.points for t in pairing])
 
     # Pullup penalty methods
     @staticmethod

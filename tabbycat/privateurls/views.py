@@ -1,6 +1,7 @@
 import logging
 from typing import Any, Dict, List, TYPE_CHECKING
 
+from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Exists, OuterRef, Prefetch, Q
@@ -238,5 +239,6 @@ class PersonIndexView(SingleObjectByRandomisedUrlMixin, PersonalizablePublicTour
         kwargs['draw_released'] = t.current_round.draw_status == Round.Status.RELEASED
         kwargs['feedback_pref'] = t.pref('participant_feedback') == 'private-urls'
         kwargs['ballots_pref'] = t.pref('participant_ballots') == 'private-urls'
+        kwargs['vapid_application_server_key'] = settings.PUSH_NOTIFICATIONS_SETTINGS['application_server_key']
 
         return super().get_context_data(**kwargs)

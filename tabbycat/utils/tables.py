@@ -15,6 +15,7 @@ from django.utils.translation import ngettext
 from adjallocation.allocation import AdjudicatorAllocation
 from draw.generator import DRAW_FLAG_DESCRIPTIONS
 from draw.models import Debate
+from draw.types import DebateSide
 from options.utils import use_team_code_names
 from results.models import BallotSubmission
 from results.result import get_result_class
@@ -25,6 +26,7 @@ from users.permissions import has_permission, Permission
 from utils.misc import reverse_round, reverse_tournament
 
 from .mixins import AdministratorMixin
+
 logger = logging.getLogger(__name__)
 _draw_flags_dict = dict(DRAW_FLAG_DESCRIPTIONS)
 
@@ -56,6 +58,7 @@ class BaseTableBuilder:
         self.sort_key = kwargs.get('sort_key', '')
         self.sort_order = kwargs.get('sort_order', '')
         self.empty_title = kwargs.get('empty_title', _("No Data Available"))
+        self.highlight_column = None  # Column index to use for row highlighting (None = no highlighting)
 
     @staticmethod
     def _convert_header(header):
@@ -155,6 +158,7 @@ class BaseTableBuilder:
             'class': self.table_class,
             'sort_key': self.sort_key,
             'sort_order': self.sort_order,
+            'highlight_column': self.highlight_column,
         }
 
 
@@ -622,7 +626,7 @@ class TabbycatTableBuilder(BaseTableBuilder):
         not, then it's just attached to the round."""
         motions = []
         for debate in debates:
-            released = debate.round.motions_released or debate.round.tournament.pref('all_results_released')
+            released = debate.round.motions_status == debate.round.MotionsStatus.MOTIONS_RELEASED or debate.round.tournament.pref('all_results_released')
             if self.tournament.pref('enable_motions') or released:
                 motions.append(getattr(debate.confirmed_ballot, 'motion', None))
             else:
@@ -943,7 +947,7 @@ class TabbycatTableBuilder(BaseTableBuilder):
             row = []
 
             if debate.is_bye:
-                cell = self._team_cell(debate.get_team('bye'), show_emoji=False, subtext=_("Bye"))
+                cell = self._team_cell(debate.get_team(DebateSide.BYE), show_emoji=False, subtext=_("Bye"))
                 cell['popover']['content'].append({'text': "<span class='%s'>%s</span>"
                         % ('text-info', _("Team was given a bye this round"))})
                 row.append(cell)

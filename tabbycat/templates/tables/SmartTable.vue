@@ -19,8 +19,9 @@
             {{ emptyTitle }}
           </td>
         </tr>
-        <tr v-for="row in dataFilteredByKey">
-          <td v-for="(cellData, cellIndex) in row" :key="cellIndex" :cell-data="cellData"
+        <tr v-for="(row, rowIndex) in dataFilteredByKey">
+          <td v-for="(cellData, cellIndex) in row" :key="cellIndex"
+              :cell-data="getCellDataWithHighlight(cellData, cellIndex, rowIndex)"
               :is="cellData['component'] ? cellData['component'] : 'SmartCell'">
           </td>
         </tr>
@@ -52,6 +53,7 @@ export default {
     tableContent: Array,
     tableClass: String,
     emptyTitle: String,
+    highlightColumn: Number, // Column index to use for row highlighting (null/undefined = no highlighting)
   },
   computed: {
     rows: function () {
@@ -84,6 +86,27 @@ export default {
     getSortableProperty (row, orderedHeaderIndex) {
       const cell = row[orderedHeaderIndex]
       const cellData = _.isUndefined(cell.sort) ? cell.text : cell.sort
+      return cellData
+    },
+    getCellDataWithHighlight (cellData, cellIndex, rowIndex) {
+      // Apply highlight-row class to all cells in rows where the highlight column value changes
+      // This creates visual separators between different bracket values
+      if (this.highlightColumn != null && rowIndex > 0) {
+        const currentRow = this.dataFilteredByKey[rowIndex]
+        const previousRow = this.dataFilteredByKey[rowIndex - 1]
+
+        // Get the sortable value from the highlight column (e.g., bracket column)
+        const currentValue = this.getSortableProperty(currentRow, this.highlightColumn)
+        const previousValue = this.getSortableProperty(previousRow, this.highlightColumn)
+
+        // If the value changed, add highlight-row class to all cells in this row
+        if (currentValue !== previousValue) {
+          const modifiedCellData = { ...cellData }
+          const existingClass = modifiedCellData.class || ''
+          modifiedCellData.class = existingClass ? `${existingClass} highlight-row` : 'highlight-row'
+          return modifiedCellData
+        }
+      }
       return cellData
     },
     async copyTableData () {

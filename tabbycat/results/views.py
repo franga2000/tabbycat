@@ -9,6 +9,7 @@ from django.db import ProgrammingError
 from django.db.models import Count, Max, Q, Window
 from django.db.models.functions import Coalesce, Rank
 from django.http import HttpResponseRedirect
+from django.http.response import Http404
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.html import escape
@@ -568,7 +569,7 @@ class BasePublicNewBallotSetView(PersonalizablePublicTournamentPageMixin, RoundM
             return self.error_page(_("The draw for this round hasn't been released yet."))
 
         if (self.tournament.pref('enable_motions') or self.tournament.pref('motion_vetoes_enabled')) \
-                and not self.round.motions_released:
+                and self.round.motions_status != Round.MotionsStatus.MOTIONS_RELEASED:
             return self.error_page(_("The motions for this round haven't been released yet."))
 
         try:
@@ -820,7 +821,12 @@ class AdjudicatorPrivateUrlBallotScoresheetView(RoundMixin, SingleObjectByRandom
             return 404, _("There is no result yet for debate %s.") % self.matchup_description()
 
     def get_context_data(self, **kwargs):
-        ballot = self.object.ballotsubmission_set.filter(discarded=False).order_by('version').last()
+        ballot = self.object.ballotsubmission_set.filter(
+            Q(participant_submitter__isnull=True) | Q(participant_submitter__url_key=self.kwargs.get('url_key')) | Q(confirmed=True),
+            discarded=False,
+        ).order_by('confirmed', 'version').last()
+        if ballot is None:
+            raise Http404
         kwargs['motion'] = ballot.motion
         kwargs['result'] = ballot.result
         kwargs['use_code_names'] = use_team_code_names(self.tournament, False)

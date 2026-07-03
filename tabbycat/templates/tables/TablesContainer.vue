@@ -33,6 +33,7 @@
             :default-sort-key="table.sort_key"
             :default-sort-order="table.sort_order"
             :empty-title="table.empty_title"
+            :highlight-column="table.highlight_column"
             ref="table">
           </smart-table>
         </div>

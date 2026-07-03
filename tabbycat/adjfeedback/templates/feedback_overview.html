@@ -92,6 +92,20 @@
           $('#edit-note').modal();
         });
       });
+      $(".edit-feedback-weight").click( function(e) {
+        e.preventDefault();
+        var current_weight = parseFloat($(this).attr("data-weight"));
+        var current_weight_percent = Math.round(current_weight * 100);
+        $("#id_feedback_weight_percent").val(current_weight_percent);
+        $('#edit-feedback-weight').modal();
+      });
+
+      // Convert percentage to decimal before form submission
+      $("#feedbackWeightForm").submit(function(e) {
+        var percent = parseFloat($("#id_feedback_weight_percent").val());
+        var decimal = percent / 100;
+        $("#id_feedback_weight").val(decimal);
+      });
     });
   </script>
 

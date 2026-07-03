@@ -193,6 +193,19 @@
       }
     </script>
 
+    <!-- Register Service Worker for Push Notifications -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register("/navigatorPush.service.js")
+          .then(function(registration) {
+            console.log('Service Worker registered with scope:', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('Service Worker registration failed:', error);
+          });
+      }
+    </script>
+
     {% if hmr %}
       <!-- webpack dev server (live js) -->
       <script type="text/javascript" src="http://localhost:8888/js/app.js"></script>

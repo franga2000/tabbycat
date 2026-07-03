@@ -11,7 +11,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Overwritten in local.py or heroku.py
 # ==============================================================================
 
-ADMINS = ('Tabbycat Debate', 'contact@tabbycat-debate.org'),
+ADMINS = ['"Tabbycat Debate" <contact@tabbycat-debate.org>']
 MANAGERS = ADMINS
 DEBUG = bool(int(os.environ['DEBUG'])) if 'DEBUG' in os.environ else False
 ENABLE_DEBUG_TOOLBAR = False # Must default to false; overriden in Dev config
@@ -25,9 +25,9 @@ if os.environ.get('DJANGO_SECRET_KEY', ''):
 # Version
 # ==============================================================================
 
-TABBYCAT_VERSION = '2.10.0'
-TABBYCAT_CODENAME = 'Sphynx'
-READTHEDOCS_VERSION = 'v2.10.0'
+TABBYCAT_VERSION = '2.11.0'
+TABBYCAT_CODENAME = 'Tonkinese'
+READTHEDOCS_VERSION = 'v2.11.0'
 
 # ==============================================================================
 # Internationalization and Localization
@@ -165,6 +165,7 @@ INSTALLED_APPS = (
     'rest_framework.authtoken',
     'drf_spectacular',
     'django_better_admin_arrayfield',
+    'push_notifications',
 )
 
 ROOT_URLCONF = 'urls'
@@ -420,3 +421,17 @@ if os.environ.get('EMAIL_HOST', ''):
     EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
     EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'true').lower() == 'true'
     EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'true').lower() == 'true'
+
+# ==============================================================================
+# Push Notifications (WebPush)
+# ==============================================================================
+
+PUSH_NOTIFICATIONS_SETTINGS = {
+    "WP_PRIVATE_KEY": os.environ.get("WP_PRIVATE_KEY"),
+    "WP_PUBLIC_KEY": os.environ.get("WP_PUBLIC_KEY"),
+    "WP_CLAIMS": {
+        "sub": os.environ.get("WP_CLAIMS_EMAIL", "mailto:contact@tabbycat-debate.org")
+    },
+    "application_server_key": os.environ.get("WP_APPLICATION_SERVER_KEY")
+}
+

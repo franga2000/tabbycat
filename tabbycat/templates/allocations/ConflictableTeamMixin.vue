@@ -48,6 +48,43 @@ export default {
         return smallestAgo
       }
     },
+    maxOccurrences: function () {
+      if (this.currentHoverHistories && this.clashableType === 'team') {
+        let hoverCount = 0
+        if ('team' in this.currentHoverHistories) {
+          for (const sourceHistory of this.currentHoverHistories.team) {
+            if (sourceHistory.id === this.clashableID) {
+              hoverCount += 1
+            }
+          }
+        }
+        if (hoverCount > 0) {
+          return hoverCount
+        }
+      }
+
+      if (!(this.debateId && this.team)) {
+        return 0
+      }
+
+      const histories = this.teamHistoriesForItem(this.team.id)
+      if (!histories || !('adjudicator' in histories)) {
+        return 0
+      }
+
+      const debateAdjudicators = this.allDebatesOrPanels[this.debateId].adjudicators
+      const counts = {}
+      let maxCount = 0
+      for (const history of histories.adjudicator) {
+        if (this.isAdjudicatorInPanel(history.id, debateAdjudicators)) {
+          counts[history.id] = (counts[history.id] || 0) + 1
+          if (counts[history.id] > maxCount) {
+            maxCount = counts[history.id]
+          }
+        }
+      }
+      return maxCount
+    },
     ...mapGetters(['allDebatesOrPanels']),
   },
 }

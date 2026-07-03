@@ -5,7 +5,6 @@ from django.forms import SelectMultiple
 from django.utils.translation import gettext_lazy as _
 from django_summernote.widgets import SummernoteWidget
 from dynamic_preferences.preferences import Section
-from dynamic_preferences.registries import global_preferences_registry
 from dynamic_preferences.types import (BooleanPreference, ChoicePreference, DecimalPreference, FloatPreference,
     IntegerPreference, LongStringPreference, MultipleChoicePreference, StringPreference)
 
@@ -945,6 +944,7 @@ class PublicPassword(StringPreference):
     name = 'public_password'
     default = ''
     required = False
+    sensitive = True
 
 
 @tournament_preferences_registry.register
@@ -1345,6 +1345,7 @@ class ReplyToEmailName(StringPreference):
     section = email
     name = 'reply_to_name'
     default = "Tabulation Team"
+    sensitive = True
 
 
 @tournament_preferences_registry.register
@@ -1355,6 +1356,7 @@ class ReplyToEmailAddress(StringPreference):
     name = 'reply_to_address'
     default = ""
     field_kwargs = {'validators': [EmailValidator()]}
+    sensitive = True
 
 
 @tournament_preferences_registry.register
@@ -1366,6 +1368,7 @@ class EmailWebhookKey(StringPreference):
     default = ""
     required = False
     field_kwargs = {'validators': [validate_slug]}
+    sensitive = True
 
 
 @tournament_preferences_registry.register
@@ -1421,7 +1424,7 @@ class PointsEmailMessageBody(LongStringPreference):
     name = 'team_points_email_message'
     default = ("<p>Hi {{ USER }},</p>"
         "After {{ ROUND }}, your team ({{ TEAM }}) currently has <strong>{{ POINTS }}</strong> wins in the {{ TOURN }}.</p>"
-        "<p>Current Standings: <a href='{{ URL }}'>{{ URL }}</a></p>")
+        "<p>Current Standings: {{ URL }}</p>")
 
 
 @tournament_preferences_registry.register
@@ -1479,7 +1482,7 @@ class PrivateUrlEmailMessage(LongStringPreference):
         "anyone, as anyone who knows it can submit forms on your behalf. This URL "
         "will not change throughout this tournament, so we suggest bookmarking it.</p>"
         "<p>Your personal private URL is:<br />"
-        "<a href='{{ URL }}'>{{ URL }}</a></p>")
+        "{{ URL }}</p>")
 
 
 @tournament_preferences_registry.register
@@ -1579,20 +1582,6 @@ class EnableMotionReuse(BooleanPreference):
     section = motions
     name = 'enable_motion_reuse'
     default = False
-
-
-# ==============================================================================
-global_settings = Section('global', verbose_name=_('Global Settings'))
-# ==============================================================================
-
-
-@global_preferences_registry.register
-class EnableAPIAccess(BooleanPreference):
-    help_text = _("Enables external applications to access the site through a dedicated interface, subject to public information settings.")
-    verbose_name = _("Enable API access")
-    section = global_settings
-    name = 'enable_api'
-    default = True
 
 
 # ==============================================================================

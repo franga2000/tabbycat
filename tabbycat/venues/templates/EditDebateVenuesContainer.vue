@@ -17,14 +17,21 @@
     </drag-and-drop-actions>
 
     <template slot="debates">
-      <drag-and-drop-debate v-for="debate in sortedDebatesOrPanels" :key="debate.id" :debateOrPanel="debate" :maxTeams="maxTeams">
-        <droppable-item slot="venue" :handle-drop="moveVenue" :drop-context="{ 'assignment': debate.id }"
-                        class="flex-12 flex-truncate border-right d-flex flex-wrap">
-          <draggable-venue v-if="debate.venue" :item="allVenues[debate.venue]" class="flex-fill"
-                           :drag-payload="{ 'item': debate.venue, 'assignment': debate.id }">
-          </draggable-venue>
-        </droppable-item>
-      </drag-and-drop-debate>
+      <div v-for="(group, gi) in groupedDebatesByRound" :key="'r-' + group.round_seq" class="mb-4">
+        <div v-if="groupedDebatesByRound.length > 1" class="mt-2 mb-3">
+          <hr v-if="gi > 0" class="my-3" />
+          <div class="text-muted small" v-text="group.round_name"></div>
+        </div>
+        <drag-and-drop-debate v-for="debate in group.debates" :key="debate.id" :debateOrPanel="debate" :maxTeams="maxTeams">
+          <droppable-item slot="venue" :handle-drop="moveVenue" :drop-context="{ 'assignment': debate.id }"
+                          class="flex-12 flex-truncate border-right d-flex flex-wrap">
+            <draggable-venue v-if="debate.venue" :item="allVenues[debate.venue]" class="flex-fill"
+                             :drag-payload="{ 'item': debate.venue, 'assignment': debate.id }"
+                             :debate-or-panel-id="debate.id">
+            </draggable-venue>
+          </droppable-item>
+        </drag-and-drop-debate>
+      </div>
     </template>
 
     <template slot="modals">
@@ -71,6 +78,17 @@ export default {
     },
     maxTeams: function () {
       return Math.max(...this.sortedDebatesOrPanels.map(d => d.teams.length))
+    },
+    groupedDebatesByRound: function () {
+      const groups = {}
+      for (const d of this.sortedDebatesOrPanels) {
+        const seq = d.round_seq ?? this.roundSlugForWSPath
+        if (!Object.prototype.hasOwnProperty.call(groups, seq)) {
+          groups[seq] = { round_seq: seq, round_name: d.round_name, debates: [] }
+        }
+        groups[seq].debates.push(d)
+      }
+      return Object.values(groups).sort((a, b) => Number(a.round_seq) - Number(b.round_seq))
     },
   },
   methods: {

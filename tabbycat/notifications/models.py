@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from push_notifications.models import WebPushDevice
 
 
 class SentMessage(models.Model):
@@ -115,3 +116,37 @@ class EmailStatus(models.Model):
 
     def __str__(self):
         return "%s - %s" % (self.email, self.event)
+
+
+class ParticipantWebPushDevice(WebPushDevice):
+    """
+    Extended WebPushDevice model that stores additional Tabbycat-specific information.
+
+    This model extends the base WebPushDevice from django-push-notifications to store:
+    - The participant (Person) who subscribed
+    - The language preference at the time of subscription
+    """
+    participant = models.ForeignKey(
+        'participants.Person',
+        models.CASCADE,
+        verbose_name=_("participant"),
+        help_text=_("The participant (adjudicator or speaker) who owns this device"),
+    )
+    language = models.CharField(
+        max_length=10,
+        blank=True,
+        default='',
+        verbose_name=_("language"),
+        help_text=_("The language preference of the participant at subscription time"),
+    )
+    tournament = models.ForeignKey('tournaments.Tournament', models.CASCADE,
+        verbose_name=_("tournament"))
+
+    class Meta:
+        verbose_name = _("WebPush device")
+        verbose_name_plural = _("WebPush devices")
+
+    def __str__(self):
+        if self.participant:
+            return f"{self.participant.name} - {self.browser or 'Unknown browser'}"
+        return super().__str__()

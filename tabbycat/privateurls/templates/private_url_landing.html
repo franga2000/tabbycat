@@ -1,5 +1,6 @@
 {% extends "tables/base_vue_table.html" %}
 {% load i18n static debate_tags %}
+{% get_current_language as LANGUAGE_CODE %}
 
 {% block page-title %}{% trans "Private URL" %}{% endblock %}
 {% block head-title %}{% trans "Private URL" %}{% endblock %}
@@ -35,6 +36,11 @@
 {% block content %}
 
   <div class="list-group">
+
+    {% if vapid_application_server_key %}
+      {% trans "Subscribe to Push Notifications" as text %}
+      {% include "components/item-action.html" with id="subscribePushNotifications" url="" icon="bell" child=False %}
+    {% endif %}
 
     {% if pref.public_checkins_submit %}
       <form action="{% tournamenturl 'checkins-public-submit' url_key %}" method="POST" id="checkInForm" class="list-group-item">
@@ -135,6 +141,125 @@
     $(document).ready( function() { // Use the fake submit buttons as real submission
       $("#triggerCheckInForm").click( function() {
         $("#checkInForm").submit();
+        return false;
+      });
+    });
+  </script>
+
+  <!-- WebPush Subscription Logic -->
+  <script>
+    // Utility function to convert base64 to Uint8Array
+    function urlBase64ToUint8Array(base64String) {
+      var padding = '='.repeat((4 - base64String.length % 4) % 4);
+      var base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+
+      var rawData = window.atob(base64);
+      var outputArray = new Uint8Array(rawData.length);
+
+      for (var i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    var applicationServerKey = '{{ vapid_application_server_key }}';
+
+    function subscribeUser() {
+      if ('Notification' in window && 'serviceWorker' in navigator) {
+        // Check if permission is already granted
+        if (Notification.permission === 'granted') {
+          registerPushSubscription();
+        } else if (Notification.permission !== 'denied') {
+          // Request permission
+          Notification.requestPermission().then(function(permission) {
+            if (permission === 'granted') {
+              registerPushSubscription();
+            } else {
+              alert('Push notification permission denied');
+            }
+          });
+        } else {
+          alert('Push notifications are blocked. Please enable them in your browser settings.');
+        }
+      } else {
+        alert('Push notifications are not supported in this browser.');
+      }
+    }
+
+    function registerPushSubscription() {
+      navigator.serviceWorker.ready.then(function(reg) {
+        reg.pushManager
+          .subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(applicationServerKey),
+          })
+          .then(function(sub) {
+            var registration_id = sub.endpoint;
+            var data = {
+              p256dh: btoa(
+                String.fromCharCode.apply(
+                  null,
+                  new Uint8Array(sub.getKey('p256dh'))
+                )
+              ),
+              auth: btoa(
+                String.fromCharCode.apply(
+                  null,
+                  new Uint8Array(sub.getKey('auth'))
+                )
+              ),
+              registration_id: registration_id,
+              language: '{{ LANGUAGE_CODE }}',
+            };
+            requestPOSTToServer(data);
+          })
+          .catch(function(e) {
+            if (Notification.permission === 'denied') {
+              console.warn('Permission for notifications was denied');
+              alert('Permission for notifications was denied');
+            } else {
+              console.error('Unable to subscribe to push', e);
+              alert('Unable to subscribe to push notifications: ' + e.message);
+            }
+          });
+      });
+    }
+
+    // Send the subscription data to the server
+    function requestPOSTToServer(data) {
+      const headers = new Headers();
+      headers.set('Content-Type', 'application/json');
+      headers.set('X-CSRFToken', '{{ csrf_token }}');
+      headers.set('Authorization', 'Key {{ object.url_key }}');
+      const requestOptions = {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(data),
+      };
+
+      return fetch('{% tournamenturl "api-webpush-register" %}', requestOptions)
+        .then(function(response) {
+          if (response.ok) {
+            return response.json();
+          } else {
+            throw new Error('Server returned ' + response.status);
+          }
+        })
+        .then(function(result) {
+          console.log('Successfully subscribed to push notifications', result);
+          alert('Successfully subscribed to push notifications!');
+        })
+        .catch(function(error) {
+          console.error('Error subscribing to push notifications:', error);
+          alert('Error subscribing to push notifications: ' + error.message);
+        });
+    }
+
+    $(document).ready(function() {
+      $('#subscribePushNotifications').click(function() {
+        subscribeUser();
         return false;
       });
     });

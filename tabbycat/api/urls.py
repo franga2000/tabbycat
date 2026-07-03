@@ -257,7 +257,11 @@ urlpatterns = [
 
                 path('/me',
                     views.ParticipantIdentificationView.as_view({'get': 'retrieve'}),
-                    name='api-tournament-detail'),
+                    name='api-participant-me'),
+
+                path('/webpush/register',
+                    views.ParticipantWebPushDeviceViewSet.as_view({'post': 'create'}),
+                    name='api-webpush-register'),
 
                 path('/', include(pref_router.urls)),  # Preferences
             ])),

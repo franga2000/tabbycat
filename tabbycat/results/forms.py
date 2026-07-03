@@ -520,7 +520,7 @@ class ScoresMixin:
         debate. Making this its own function allows subclasses to extend this so
         that it can use the same DebateResult as the super class."""
         initial = {}
-        if all(result.teamscore_field_score(side) is None for side in self.sides) and result.get_winner():
+        if not result.is_voting and all(result.teamscore_field_score(side) is None for side in self.sides) and result.get_winner():
             forfeiter = next(iter(set(self.sides) - result.get_winner()))
             initial[self._fieldname_forfeit(forfeiter)] = True
             return initial
@@ -967,6 +967,9 @@ class PerAdjudicatorBallotSetForm(ScoresMixin, BaseBallotSetForm):
     # --------------------------------------------------------------------------
 
     def clean_scoresheet(self, cleaned_data):
+        if any(cleaned_data.get(self._fieldname_forfeit(side), False) for side in self.sides):
+            return
+
         for adj in self.adjudicators:
             should_skip = False
             for side, pos in product(self.sides, self.positions):

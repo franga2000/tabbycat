@@ -44,26 +44,32 @@
     </drag-and-drop-actions>
 
     <template slot="debates">
-      <drag-and-drop-debate
-        v-for="debate in sortedDebatesOrPanels"
-        :key="debate.id"
-        :debateOrPanel="debate"
-        :maxTeams="maxTeams"
-      >
-        <debate-or-panel-importance
-          slot="importance"
-          :debate-or-panel="debate"
-        ></debate-or-panel-importance>
-        <debate-or-panel-adjudicators
-          slot="adjudicators"
-          :debate-or-panel="debate"
-          :handle-debate-or-panel-drop="moveAdjudicator"
-          :handle-panel-swap="swapPanels"
+      <div v-for="(group, gi) in groupedDebatesByRound" :key="'r-' + group.round_seq" class="mb-4">
+        <div v-if="groupedDebatesByRound.length > 1" class="mt-2 mb-3">
+          <hr v-if="gi > 0" class="my-3" />
+          <div class="text-muted small" v-text="group.round_name"></div>
+        </div>
+        <drag-and-drop-debate
+          v-for="debate in group.debates"
+          :key="debate.id"
+          :debateOrPanel="debate"
+          :maxTeams="maxTeams"
         >
-        </debate-or-panel-adjudicators>
-        <template slot="venue"><span></span></template
-        ><!--Hide Venues-->
-      </drag-and-drop-debate>
+          <debate-or-panel-importance
+            slot="importance"
+            :debate-or-panel="debate"
+          ></debate-or-panel-importance>
+          <debate-or-panel-adjudicators
+            slot="adjudicators"
+            :debate-or-panel="debate"
+            :handle-debate-or-panel-drop="moveAdjudicator"
+            :handle-panel-swap="swapPanels"
+          >
+          </debate-or-panel-adjudicators>
+          <template slot="venue"><span></span></template
+          ><!--Hide Venues-->
+        </drag-and-drop-debate>
+      </div>
       <div class="text-center lead mx-5 p-5" v-if="sortedDebatesOrPanels.length === 0">
         <p class="mx-5 lead mt-2 px-5" v-text="gettext(noDebatesInline)"></p>
       </div>
@@ -101,6 +107,19 @@ export default {
   computed: {
     maxTeams: function () {
       return Math.max(...this.sortedDebatesOrPanels.map(d => d.teams.length))
+    },
+    groupedDebatesByRound: function () {
+      // Group already-sorted debates by their round for visual separation
+      const groups = {}
+      for (const d of this.sortedDebatesOrPanels) {
+        const seq = d.round_seq ?? this.roundSlugForWSPath
+        if (!Object.prototype.hasOwnProperty.call(groups, seq)) {
+          groups[seq] = { round_seq: seq, round_name: d.round_name, debates: [] }
+        }
+        groups[seq].debates.push(d)
+      }
+      // Return in ascending round order
+      return Object.values(groups).sort((a, b) => Number(a.round_seq) - Number(b.round_seq))
     },
   },
 }

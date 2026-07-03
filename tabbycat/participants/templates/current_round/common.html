@@ -59,7 +59,7 @@
             {% if motion.info_slide %}
               <span class="h6 badge badge-light text-secondary mx-auto mb-3 mt-0 hover-target"
                     data-toggle="modal" data-target="#info_{{ motion.id }}">
-                {% trans "View Info Slide" %}
+                {% trans "View Info-slide" %}
               </span>
               {% include 'motions_info.html' %}
             {% endif %}
@@ -74,7 +74,7 @@
             {% if rm.motion.info_slide %}
               <span class="h6 badge badge-light text-secondary mx-auto mb-3 mt-0 hover-target"
                     data-toggle="modal" data-target="#info_{{ rm.motion.id }}">
-                {% trans "View Info Slide" %}
+                {% trans "View Info-slide" %}
               </span>
               {% include 'motions_info.html' with motion=rm.motion %}
             {% endif %}

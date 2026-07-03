@@ -21,8 +21,8 @@ from participants.templatetags.team_name_for_data_entry import team_name_for_dat
 from registration.views import CustomQuestionFormsetView
 from results.mixins import PublicSubmissionFieldsMixin, TabroomSubmissionFieldsMixin
 from results.prefetch import populate_wins_for_debateteams
-from tournaments.mixins import (PersonalizablePublicTournamentPageMixin, PublicTournamentPageMixin, SingleObjectByRandomisedUrlMixin,
-                                SingleObjectFromTournamentMixin, TournamentMixin)
+from tournaments.mixins import (PersonalizablePublicTournamentPageMixin, PublicTournamentPageMixin, RoundMixin,
+    SingleObjectByRandomisedUrlMixin, SingleObjectFromTournamentMixin, TournamentMixin)
 from tournaments.models import Round
 from users.permissions import Permission
 from utils.misc import reverse_tournament
@@ -684,6 +684,32 @@ class SetAdjudicatorBreakingStatusView(AdministratorMixin, TournamentMixin, LogA
         return JsonResponse(json.dumps(True), safe=False)
 
 
+class SetFeedbackWeightView(LogActionMixin, AdministratorMixin, RoundMixin, PostOnlyRedirectView):
+
+    action_log_type = ActionLogEntry.ActionType.ROUND_EDIT
+    action_log_content_object_attr = 'round'
+    edit_permission = Permission.EDIT_BASEJUDGESCORES_IND
+    tournament_redirect_pattern_name = 'adjfeedback-overview'
+
+    def post(self, request, *args, **kwargs):
+        feedback_weight = float(request.POST.get("feedback_weight"))
+        assert (0 <= feedback_weight <= 1), "Feedback weight must be between 0 and 1."
+
+        self.round.feedback_weight = feedback_weight
+        self.round.save()
+
+        self.log_action()
+
+        messages.success(request, _("Feedback weight for %(round)s updated to %(weight)d%%.") % {
+            'round': self.round.abbreviation,
+            'weight': feedback_weight * 100,
+        })
+        return super().post(request, *args, **kwargs)
+
+    def get_redirect_url(self, *args, **kwargs):
+        return reverse_tournament(self.tournament_redirect_pattern_name, self.tournament)
+
+
 class BaseFeedbackProgressView(TournamentMixin, VueTableTemplateView):
 
     page_title = gettext_lazy("Feedback Progress")
@@ -865,6 +891,7 @@ class BaseCsvView(View):
 
 class AdjudicatorScoresCsvView(TournamentMixin, AdministratorMixin, BaseCsvView):
     filename = "scores.csv"
+    view_permission = Permission.VIEW_FEEDBACK
 
     def write_rows(self, writer):
         writer.writerow(["id", "name", "base_score", "gender", "region", "nrounds"])
@@ -877,6 +904,7 @@ class AdjudicatorScoresCsvView(TournamentMixin, AdministratorMixin, BaseCsvView)
 
 class AdjudicatorFeedbackCsvView(FeedbackMixin, AdministratorMixin, TournamentMixin, BaseCsvView):
     filename = "feedback.csv"
+    view_permission = Permission.VIEW_FEEDBACK
 
     def get_feedback_queryset(self):
         return super().get_feedback_queryset().filter(confirmed=True)
