@@ -309,7 +309,7 @@ class BaseBallotSetView(LogActionMixin, TournamentMixin, FormView):
             'DebateResultByAdjudicatorWithScores': PerAdjudicatorBallotSetForm,
             'ConsensusDebateResult': SingleEliminationBallotSetForm,
             'ConsensusDebateResultWithScores': SingleBallotSetForm,
-        }[get_class_name(self.ballotsub, self.debate.round, self.tournament)]
+        }[get_class_name(self.ballotsub, self.debate.round, self.tournament, True)]
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -514,6 +514,11 @@ class BaseEditBallotSetView(SingleObjectFromTournamentMixin, BaseBallotSetView):
         self.round_motions = {}
         for rm in RoundMotion.objects.filter(round_id=self.debate.round_id):
             self.round_motions[rm.motion_id] = rm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['result'] = DebateResult(self.ballotsub, tournament=self.tournament)
+        return kwargs
 
 
 class AdminEditBallotSetView(AdministratorBallotSetMixin, BaseEditBallotSetView):
@@ -964,7 +969,7 @@ class BaseMergeLatestBallotsView(BaseNewBallotSetView):
         criteria = ScoreCriterion.objects.filter(tournament=self.tournament)
         self.result = DebateResult(self.ballotsub, tournament=self.tournament, criteria=criteria)
         self.errors = self.result.populate_from_merge(*[b.result for b in bses]) if prefill else []
-        self.vetos = None
+        self.vetos = {}
 
         if prefill:
             # Handle motion conflicts
@@ -983,7 +988,6 @@ class BaseMergeLatestBallotsView(BaseNewBallotSetView):
                     self.vetos = merge_motion_vetos(self.ballotsub, bs_motions)
                 except ValidationError as e:
                     messages.error(self.request, e)
-
 
     def get_all_ballotsubs(self):
         q = super().get_all_ballotsubs()
