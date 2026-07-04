@@ -25,9 +25,9 @@ if os.environ.get('DJANGO_SECRET_KEY', ''):
 # Version
 # ==============================================================================
 
-TABBYCAT_VERSION = '2.11.0'
+TABBYCAT_VERSION = '2.11.1'
 TABBYCAT_CODENAME = 'Tonkinese'
-READTHEDOCS_VERSION = 'v2.11.0'
+READTHEDOCS_VERSION = 'v2.11.1'
 
 # ==============================================================================
 # Internationalization and Localization
@@ -308,6 +308,26 @@ SUMMERNOTE_CONFIG = {
     ],
     'disable_upload': True,
     'iframe': True, # Necessary; if just to compartmentalise jQuery dependency,
+    'js': (
+        '/static/js/vendor/summernote-cleaner.js',
+    ),
+    'js_for_inplace': (
+        '/static/js/vendor/summernote-cleaner.js',
+    ),
+    'summernote': {
+        'cleaner': {
+            'action': 'both',  # both|button|paste 'button' only cleans via toolbar button, 'paste' only cleans on paste, 'both' does both
+            'newline': '<br>',
+            'keepHtml': False,
+            'keepOnlyTags': ['<p>', '<br>', '<ul>', '<ol>', '<li>', '<b>', '<strong>', '<i>', '<em>', '<u>', '<a>'],
+            'keepClasses': False,
+            'badTags': ['style', 'script', 'applet', 'embed', 'noframes', 'noscript', 'html'],
+            'badAttributes': ['style', 'start'],
+            'limitChars': False,
+            'limitDisplay': 'both',
+            'limitStop': False,
+        },
+    },
 }
 
 X_FRAME_OPTIONS = 'SAMEORIGIN' # Necessary to get Django-Summernote working because of Django 3 changes
@@ -434,4 +454,6 @@ PUSH_NOTIFICATIONS_SETTINGS = {
     },
     "application_server_key": os.environ.get("WP_APPLICATION_SERVER_KEY")
 }
+
+ENABLE_PUSH_NOTIFICATIONS = os.environ.get("WP_PRIVATE_KEY") is not None
 
