@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #   Shorthand to migrate and run honcho in docker
 
 cd tabbycat

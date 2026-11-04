@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #   Front-end to starting docker for OSX
 
 # Get directory this is being run from
