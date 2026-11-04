@@ -33,7 +33,7 @@ RUN --mount=type=cache,target=/app/node_modules/.cache npm run build
 ########################
 
 # Grab a python image
-FROM python:3.11-alpine
+FROM python:3.12-alpine
 
 # Just needed for all things python (note this is setting an env variable)
 ENV PYTHONUNBUFFERED 1
