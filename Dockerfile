@@ -10,7 +10,7 @@
 ########################
 
 # Barebones NodeJS image
-FROM node:16-alpine AS vue-build
+FROM node:26-alpine AS vue-build
 
 WORKDIR /app
 
