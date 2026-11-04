@@ -33,7 +33,7 @@ RUN --mount=type=cache,target=/app/node_modules/.cache npm run build
 ########################
 
 # Grab a python image
-FROM python:3.12-alpine
+FROM python:3.12
 
 # Just needed for all things python (note this is setting an env variable)
 ENV PYTHONUNBUFFERED 1
@@ -44,8 +44,11 @@ ENV IN_DOCKER 1
 RUN mkdir /tcd
 WORKDIR /tcd
 
-# Install Nginx
-RUN apk add nginx --no-cache
+# Install Nginx and clear APT cache afterwards
+# NOTE: all of this is under one RUN directive so only one layer is created and the final image is smaller
+RUN apt-get update && \
+	apt-get install -y nginx && \
+	apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Pipenv
 RUN pip install pipenv
