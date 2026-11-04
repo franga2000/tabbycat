@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #   Shorthand to run django worker in docker
 
 cd tabbycat
