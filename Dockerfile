@@ -17,10 +17,10 @@ WORKDIR /app
 # Copy in dependency list and install the dependencies
 # Note: This is copied separately from the rest of the code to take advantage of build caching
 COPY ./package.json ./package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
-# Copy files, required for the build
-COPY . ./
+# Copy files, required for the build (skip Python files to avoid invalidating the cache)
+COPY --exclude=*/*/*.py --exclude=*/*/*/*.py . ./
 
 # Build the static files
 RUN --mount=type=cache,target=/app/node_modules/.cache npm run build
@@ -67,6 +67,6 @@ RUN pipenv install --system --deploy
 RUN mkdir -p ./tabbycat/static/vue
 COPY --from=vue-build /app/tabbycat/static/ /tcd/tabbycat/static/
 
-ADD . /tcd/
+COPY . /tcd/
 
 RUN python ./tabbycat/manage.py collectstatic --noinput -v 0
